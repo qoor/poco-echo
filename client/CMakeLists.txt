@@ -8,9 +8,13 @@ set (SOURCE_FILE
 	"src/main.h"
 	"src/COption.cpp"
 	"src/COption.h"
+	"src/CClient.cpp"
+	"src/CClient.h"
+	"src/CActionManager.cpp"
+	"src/CActionManager.h"
 )
 
 add_executable (echo-client ${SOURCE_FILE})
 
-target_link_libraries (echo-client ${PROJECT_SOURCE_DIR}/shared/lib/windows/PocoFoundationd.lib)
-target_link_libraries (echo-client ${PROJECT_SOURCE_DIR}/shared/lib/windows/PocoNetd.lib)
+target_link_libraries (echo-client ${LIBRARY_PATH}/Poco/windows/PocoFoundationd.lib)
+target_link_libraries (echo-client ${LIBRARY_PATH}/Poco/windows/PocoNetd.lib)

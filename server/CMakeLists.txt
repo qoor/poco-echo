@@ -9,5 +9,5 @@ set (SOURCE_FILE
 
 add_executable (echo-server ${SOURCE_FILE})
 
-target_link_libraries (echo-server ${PROJECT_SOURCE_DIR}/shared/lib/windows/PocoFoundationd.lib)
-target_link_libraries (echo-server ${PROJECT_SOURCE_DIR}/shared/lib/windows/PocoNetd.lib)
+target_link_libraries (echo-server ${LIBRARY_PATH}/Poco/windows/PocoFoundationd.lib)
+target_link_libraries (echo-server ${LIBRARY_PATH}/Poco/windows/PocoNetd.lib)

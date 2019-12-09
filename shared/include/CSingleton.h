@@ -10,7 +10,7 @@ protected:
 	CSingleton()
 	{
 		assert(m_pInstance != nullptr);
-		m_pInstance = this;
+		m_pInstance = static_cast<T*>(this);
 	}
 
 	static T* GetInstance()
