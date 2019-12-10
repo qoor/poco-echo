@@ -15,5 +15,15 @@ int main(int argc, char** argv)
 	CClient* pClient = new CClient(pOption->GetServerAddress(), pOption->GetServerPort());
 	assert(pClient);
 
+	if (pClient->TryConnect())
+	{
+		pClient->Run();
+
+		pClient->Disconnect();
+	}
+
+	delete pOption;
+	delete pClient;
+
 	return 0;
 }

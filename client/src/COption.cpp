@@ -21,6 +21,7 @@ bool COption::ParseOptions(int argc, char** argv)
 {
 	if (argc <= 1)
 	{
+		std::cout << "사용법: echo-client server_ip [server_port = 28210]\n";
 		return false;
 	}
 
@@ -49,6 +50,7 @@ bool COption::ParseOptions(int argc, char** argv)
 
 		if (bInvalidPort)
 		{
+			std::cout << "올바르지 않은 포트 번호입니다.\n";
 			return false;
 		}
 	}

@@ -12,5 +12,7 @@ using Poco::Net::SocketAddress;
 using Poco::Exception;
 using Poco::FIFOBuffer;
 
+#include "Packets.h"
 #include "CSingleton.h"
+#include "CPacketHandler.h"
 #include "CClient.h"

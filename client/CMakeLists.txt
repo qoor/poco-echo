@@ -1,6 +1,7 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
 include_directories (${PROJECT_SOURCE_DIR}/shared/include)
+include_directories (${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set (SOURCE_FILE
 	"src/StdInc.h"
@@ -12,6 +13,11 @@ set (SOURCE_FILE
 	"src/CClient.h"
 	"src/CActionManager.cpp"
 	"src/CActionManager.h"
+	"src/CPacketHandler.cpp"
+	"src/CPacketHandler.h"
+
+	"src/packet/CMessage.cpp"
+	"src/packet/CMessage.h"
 )
 
 add_executable (echo-client ${SOURCE_FILE})

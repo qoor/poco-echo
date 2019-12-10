@@ -9,7 +9,7 @@ private:
 protected:
 	CSingleton()
 	{
-		assert(m_pInstance != nullptr);
+		assert(!m_pInstance);
 		m_pInstance = static_cast<T*>(this);
 	}
 
