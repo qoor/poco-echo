@@ -156,7 +156,8 @@ int CWhiteList::OnIpRemove(void* pNotUsed, int argc, char** argv, char** aszColu
 
 bool CWhiteList::IsClientCanConnect(SocketAddress* pClient)
 {
-	return IsIpCanConnect(pClient->host().toString());
+	std::string address(pClient->host().toString());
+	return IsIpCanConnect(address);
 }
 
 bool CWhiteList::IsIpCanConnect(std::string& strIp)
