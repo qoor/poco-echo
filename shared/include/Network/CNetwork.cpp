@@ -340,7 +340,7 @@ void CNetworkServer::OnUpdate()
 
 			if (iter != clients.end())
 			{
-				iter->close();
+				std::cout << "클라이언트 " << dropTarget.address().toString() << " 의 연결이 종료됩니다.\n";
 				clients.erase(iter);
 			}
 		}
