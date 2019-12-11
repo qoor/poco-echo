@@ -1,5 +1,7 @@
 cmake_minimum_required (VERSION 3.8)
 
+set (CMAKE_CXX_FLAGS "-fpermissive -std=c++14")
+
 include_directories (${PROJECT_SOURCE_DIR}/shared/include)
 include_directories (${PROJECT_SOURCE_DIR}/shared/include/Network)
 include_directories (${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -33,6 +35,12 @@ set (SOURCE_FILE
 
 add_executable (echo-server ${SOURCE_FILE})
 
-target_link_libraries (echo-server ${LIBRARY_PATH}/Poco/windows/PocoFoundationd.lib)
-target_link_libraries (echo-server ${LIBRARY_PATH}/Poco/windows/PocoNetd.lib)
-target_link_libraries (echo-server ${CMAKE_CURRENT_SOURCE_DIR}/vendor/lib/sqlite/sqlite3.lib)
+if (WIN32)
+	target_link_libraries (echo-server ${LIBRARY_PATH}/Poco/windows/PocoFoundationd.lib)
+	target_link_libraries (echo-server ${LIBRARY_PATH}/Poco/windows/PocoNetd.lib)
+	target_link_libraries (echo-server ${CMAKE_CURRENT_SOURCE_DIR}/vendor/lib/sqlite/sqlite3.lib)
+else ()
+	target_link_libraries (echo-server ${LIBRARY_PATH}/Poco/linux/libPocoFoundation.so)
+	target_link_libraries (echo-server ${LIBRARY_PATH}/Poco/linux/libPocoNet.so)
+	target_link_libraries (echo-server ${CMAKE_CURRENT_SOURCE_DIR}/vendor/lib/sqlite/libsqlite3.so)
+endif ()
