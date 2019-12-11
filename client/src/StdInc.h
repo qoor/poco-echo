@@ -18,5 +18,4 @@ using Poco::FIFOBufferStream;
 #include "Packets.h"
 #include "CNetwork.h"
 #include "CSingleton.h"
-#include "CPacketHandler.h"
 #include "CClient.h"

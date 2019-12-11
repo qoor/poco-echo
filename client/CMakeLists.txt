@@ -14,11 +14,6 @@ set (SOURCE_FILE
 	"src/CClient.h"
 	"src/CActionManager.cpp"
 	"src/CActionManager.h"
-	"src/CPacketHandler.cpp"
-	"src/CPacketHandler.h"
-
-	"src/packet/CMessage.cpp"
-	"src/packet/CMessage.h"
 
 	${PROJECT_SOURCE_DIR}/shared/include/Network/CNetwork.cpp
 	${PROJECT_SOURCE_DIR}/shared/include/Network/CNetwork.h

@@ -4,7 +4,6 @@ class CClient : public CSingleton<CClient>
 {
 private:
 	class CActionManager* m_pActionManager;
-	CPacketHandler* m_pPacketHandler;
 	CNetwork* m_pNetwork;
 
 public:

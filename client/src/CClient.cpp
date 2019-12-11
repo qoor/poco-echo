@@ -6,7 +6,6 @@ CClient* CSingleton<CClient>::m_pInstance = nullptr;
 CClient::CClient() : m_pNetwork(nullptr)
 {
 	m_pActionManager = new CActionManager(this);
-	m_pPacketHandler = new CPacketHandler();
 }
 
 CClient::~CClient()
