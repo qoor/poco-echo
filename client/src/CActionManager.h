@@ -1,6 +1,6 @@
 #pragma once
 
-class CActionManager : public CSingleton<CActionManager>
+class CActionManager : public Poco::Runnable, CSingleton<CActionManager>
 {
 private:
 	CClient* m_pClient;
@@ -13,6 +13,8 @@ public:
 
 	void ShowHelp();
 	bool PopActionResult(int* piDestActionType, void** pDestination, int* piDestSize);
+
+	virtual void run();
 
 private:
 	bool GetAction(int iAction);

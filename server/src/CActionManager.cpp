@@ -15,6 +15,7 @@ void CActionManager::ShowHelp()
 	std::cout << "\t\t\t기능 목록\n";
 	std::cout << "1: 화이트리스트 IP 추가\n";
 	std::cout << "2: 화이트리스트 IP 제거\n";
+	std::cout << "3: 종료\n";
 	std::cout << "====================================\n";
 	std::cout << '\n';
 	std::cout << "기능을 선택해 주십시오: ";
@@ -60,10 +61,17 @@ bool CActionManager::GetAction(int iAction)
 
 			if (!m_pWhiteList->Remove(szIp))
 			{
-				std::cout << "등록되지 IP이거나 제거를 실패했습니다.\n";
+				std::cout << "등록되지 않은 IP이거나 제거를 실패했습니다.\n";
 				return false;
 			}
 
+			break;
+		}
+
+		case 3:
+		{
+			std::cout << "서버를 종료합니다.\n";
+			exit(0);
 			break;
 		}
 
@@ -75,4 +83,12 @@ bool CActionManager::GetAction(int iAction)
 	}
 
 	return true;
+}
+
+void CActionManager::run()
+{
+	while (true)
+	{
+		ShowHelp();
+	}
 }

@@ -79,7 +79,7 @@ bool CWhiteList::TryGetList()
 
 bool CWhiteList::Add(std::string strIp)
 {
-	if (!IsIpCanConnect(strIp))
+	if (IsIpCanConnect(strIp))
 	{
 		return false;
 	}
@@ -93,16 +93,19 @@ bool CWhiteList::Add(std::string strIp)
 
 	if (iResult == SQLITE_OK)
 	{
+		sqlite3_free(szErrMsg);
 		m_acceptList.emplace(strIp, true);
 		return true;
 	}
-
+	
+	std::cout << "[SQLite3] Error(" << iResult << "): " << szErrMsg << "\n";
+	sqlite3_free(szErrMsg);
 	return false;
 }
 
 bool CWhiteList::Remove(std::string strIp)
 {
-	if (IsIpCanConnect(strIp))
+	if (!IsIpCanConnect(strIp))
 	{
 		return false;
 	}
@@ -112,14 +115,17 @@ bool CWhiteList::Remove(std::string strIp)
 	int iResult;
 
 	sprintf(szSql, "DELETE FROM whitelist WHERE Address = '%s'", strIp.c_str());
-	iResult = sqlite3_exec(m_pDatabase, szSql, CWhiteList::OnIpAdd, nullptr, &szErrMsg);
+	iResult = sqlite3_exec(m_pDatabase, szSql, CWhiteList::OnIpRemove, nullptr, &szErrMsg);
 
 	if (iResult == SQLITE_OK)
 	{
+		sqlite3_free(szErrMsg);
 		m_acceptList.erase(strIp);
 		return true;
 	}
 
+	std::cout << "[SQLite3] Error(" << iResult << "): " << szErrMsg << "\n";
+	sqlite3_free(szErrMsg);
 	return false;
 }
 

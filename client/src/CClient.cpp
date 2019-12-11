@@ -1,18 +1,10 @@
 #include "StdInc.h"
 #include "CActionManager.h"
 
-#define MAX_TIMEOUT 8
-
 CClient* CSingleton<CClient>::m_pInstance = nullptr;
 
-CClient::CClient(const char* szServerAddress, int iServerPort) : m_pStreamSocket(nullptr)
+CClient::CClient() : m_pNetwork(nullptr)
 {
-	assert(szServerAddress);
-	assert(iServerPort > 0 && iServerPort <= 65535);
-
-	m_pSocketAddress = new SocketAddress(szServerAddress, iServerPort);
-	assert(m_pSocketAddress);
-
 	m_pActionManager = new CActionManager(this);
 	m_pPacketHandler = new CPacketHandler();
 }
@@ -20,60 +12,25 @@ CClient::CClient(const char* szServerAddress, int iServerPort) : m_pStreamSocket
 CClient::~CClient()
 {
 	Disconnect();
-
-	if (m_pSocketAddress)
-	{
-		delete m_pSocketAddress;
-		m_pSocketAddress = nullptr;
-	}
 }
 
-bool CClient::TryConnect()
+bool CClient::TryConnect(const char* szServerAddress, int iServerPort)
 {
-	if (m_pStreamSocket)
+	assert(szServerAddress);
+	assert(iServerPort > 0 && iServerPort <= 65535);
+
+	m_pNetwork = new CNetwork();
+	assert(m_pNetwork);
+
+	std::cout << "서버 " << szServerAddress << ":" << iServerPort << "에 연결 중..\n";
+
+	if (m_pNetwork->TryClientStart(szServerAddress, iServerPort))
 	{
-		return false;
+		m_pNetwork->AddPacketHandler(CClient::PacketHandler);
 	}
-
-	assert(m_pSocketAddress);
-
-	m_pStreamSocket = new StreamSocket();
-	assert(m_pStreamSocket);
-
-	try
+	else
 	{
-		Poco::Timespan timeOut(1, 0);
-
-		m_pStreamSocket->connectNB(*m_pSocketAddress);
-
-		std::cout << "서버 " << m_pSocketAddress->toString() << "에 접속 하는 중..\n";
-		m_pStreamSocket->poll(Poco::Timespan(MAX_TIMEOUT, 0), Poco::Net::Socket::SELECT_READ);
-
-		std::cout << "인증 확인..\n";
-
-		ePacketType packetType;
-		int nCount = m_pStreamSocket->receiveBytes(reinterpret_cast<char*>(&packetType), sizeof(ePacketType));
-
-		if (nCount == 0)
-		{
-			throw Exception("Server closed the connection.");
-		}
-		else
-		{
-			if (packetType != PACKET_TYPE_ALLOW)
-			{
-				throw Exception("Access denied.");
-			}
-		}
-
-		std::cout << "서버 " << m_pSocketAddress->toString() << " 접속 성공!\n";
-	}
-	catch (Exception e)
-	{
-		Disconnect();
-
-		std::cout << "서버에 접속할 수 없습니다: " << e.displayText() << std::endl;
-		return false;
+		std::cout << "서버에 접속할 수 없습니다.\n";
 	}
 
 	return true;
@@ -81,34 +38,34 @@ bool CClient::TryConnect()
 
 bool CClient::Disconnect()
 {
-	if (!m_pStreamSocket)
+	if (!m_pNetwork)
 	{
 		return false;
 	}
 
-	m_pStreamSocket->close();
-	delete m_pStreamSocket;
-	m_pStreamSocket = nullptr;
+	if (m_pNetwork->IsInitialized())
+	{
+		m_pNetwork->Close();
+	}
 
+	delete m_pNetwork;
+	m_pNetwork = nullptr;
 	return true;
 }
 
 void CClient::Run()
 {
-	if (!m_pStreamSocket)
+	if (!m_pNetwork || !m_pNetwork->IsInitialized())
 	{
 		return;
 	}
 
-	while (true)
-	{
-		ListenAction();
+	m_pNetwork->StartUpdateThread();
 
-		if (!ListenPacket())
-		{
-			break;
-		}
-	}
+	Poco::Thread actionThread;
+
+	actionThread.start(*m_pActionManager);
+	actionThread.join();
 }
 
 bool CClient::ListenAction()
@@ -116,8 +73,6 @@ bool CClient::ListenAction()
 	int iActionType;
 	void* pResult;
 	int iResultSize;
-
-	m_pActionManager->ShowHelp();
 
 	if (m_pActionManager->PopActionResult(&iActionType, &pResult, &iResultSize))
 	{
@@ -138,54 +93,57 @@ bool CClient::ListenAction()
 		}
 
 		Poco::Timespan timeOut(1, 0);
+		FIFOBuffer buffer(MAX_BUFFER_LENGTH);
+		StreamSocket* pSocket = dynamic_cast<StreamSocket*>(m_pNetwork->GetSocket());
 
-		while (!m_pStreamSocket->poll(timeOut, Poco::Net::Socket::SELECT_WRITE));
-		m_pStreamSocket->sendBytes(&iResultSize, sizeof(int));
-		
-		while (!m_pStreamSocket->poll(timeOut, Poco::Net::Socket::SELECT_WRITE));
-		m_pStreamSocket->sendBytes(pResult, iResultSize);
+		++iResultSize; // EOS 포함
 
-		while (!m_pStreamSocket->poll(timeOut, Poco::Net::Socket::SELECT_WRITE));
+		buffer.write(reinterpret_cast<char*>(&packetType), sizeof(ePacketType));
+		buffer.write(reinterpret_cast<char*>(&iResultSize), sizeof(int));
+		buffer.write(reinterpret_cast<char*>(pResult), iResultSize + 1);
 
-		m_pStreamSocket->sendBytes(&packetType, sizeof(ePacketType));
+		while (!pSocket->poll(timeOut, Poco::Net::Socket::SELECT_WRITE));
+
+		int nCount = pSocket->sendBytes(buffer);
+
+		if (nCount == 0)
+		{
+			std::cout << "전송 실패\n";
+		}
+		else
+		{
+			std::cout << "서버에게 메세지를 전달하였습니다.\n";
+		}
 	}
 
 	return true;
 }
 
-bool CClient::ListenPacket()
+void CClient::PacketHandler(StreamSocket* pSocket, FIFOBuffer* pBuffer, ePacketType packetType)
 {
-	Poco::Timespan timeOut(1, 0);
-	int iPacketType;
-	int nByteCount;
-
-	while (!m_pStreamSocket->poll(timeOut, Poco::Net::Socket::SELECT_READ));
-
-	nByteCount = m_pStreamSocket->receiveBytes(&nByteCount, sizeof(int));
-
-	if (nByteCount == 0)
+	switch (packetType)
 	{
-		return false;
+		case PACKET_TYPE_ACCEPT:
+		{
+			std::cout << "서버 " << CClient::GetInstance()->m_pNetwork->GetSocket()->address().toString() << "에 연결 성공!\n";
+		}
+		case PACKET_TYPE_MESSAGE:
+		{
+			int iLength;
+			char* szMessage;
+
+			pBuffer->read(reinterpret_cast<char*>(&iLength), sizeof(int));
+
+			szMessage = new char[iLength];
+			pBuffer->read(szMessage, iLength);
+
+			std::cout << "서버에게서 받은 메세지: " << szMessage << "\n";
+			break;
+		}
+
+		default:
+		{
+			std::cout << "서버에게서 알 수 없는 패킷이 들어왔습니다. (id: " << packetType << "\n";
+		}
 	}
-
-	while (!m_pStreamSocket->poll(timeOut, Poco::Net::Socket::SELECT_READ));
-
-	Poco::FIFOBuffer buffer(nByteCount + 1);
-
-	//nByteCount = pSocket->receiveBytes(&iPacketType, sizeof(int));
-	nByteCount = m_pStreamSocket->receiveBytes(buffer);
-
-	if (nByteCount == 0)
-	{
-		return false;
-	}
-
-	iPacketType = *(reinterpret_cast<int*>(buffer.next()));
-
-	if (!m_pPacketHandler->ProcessPacket(&buffer, static_cast<ePacketType>(iPacketType)))
-	{
-		return false;
-	}
-
-	return true;
 }

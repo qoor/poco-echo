@@ -3,21 +3,19 @@
 class CClient : public CSingleton<CClient>
 {
 private:
-	SocketAddress* m_pSocketAddress;
-	StreamSocket* m_pStreamSocket;
 	class CActionManager* m_pActionManager;
 	CPacketHandler* m_pPacketHandler;
-
-private:
-	CClient();
+	CNetwork* m_pNetwork;
 
 public:
-	CClient(const char* szServerAddress, int iServerPort);
+	CClient();
 	~CClient();
 
-	bool TryConnect();
+	bool TryConnect(const char* szServerAddress, int iServerPort);
 	bool Disconnect();
 	void Run();
+
 	bool ListenAction();
-	bool ListenPacket();
+
+	static void PacketHandler(StreamSocket* pSocket, FIFOBuffer* pBuffer, ePacketType packetType);
 };

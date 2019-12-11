@@ -2,8 +2,12 @@
 
 class CPacketHandler : public CSingleton<CPacketHandler>
 {
-public:
-	CPacketHandler() { }
+private:
+	class CServer* m_pServer;
+	class CPacketTranslator* m_pPacketTranslator;
 
-	void ProcessPacket(StreamSocket* pClient, Poco::FIFOBuffer* pBuffer, ePacketType packetType);
+public:
+	CPacketHandler(CServer* pServer);
+
+	void ProcessPacket(StreamSocket* pClient, FIFOBuffer* pBuffer, ePacketType packetType);
 };

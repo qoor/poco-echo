@@ -14,6 +14,7 @@ void CActionManager::ShowHelp()
 	std::cout << "====================================\n";
 	std::cout << "\t\t\t기능 목록\n";
 	std::cout << "1: 메세지 전송\n";
+	std::cout << "2: 종료\n";
 	std::cout << "====================================\n";
 	std::cout << '\n';
 	std::cout << "기능을 선택해 주십시오: ";
@@ -52,7 +53,13 @@ bool CActionManager::GetAction(int iAction)
 			strncpy(reinterpret_cast<char*>(m_pActionResult), szMessage, iMessageLength);
 			reinterpret_cast<char*>(m_pActionResult)[iMessageLength] = '\0';
 			m_actionResultSize = iMessageLength + 1;
+			break;
+		}
 
+		case 2:
+		{
+			std::cout << "클라이언트를 종료합니다.\n";
+			exit(0);
 			break;
 		}
 
@@ -64,6 +71,7 @@ bool CActionManager::GetAction(int iAction)
 	}
 
 	m_iActionType = iAction;
+	m_pClient->ListenAction();
 
 	return true;
 }
@@ -77,10 +85,14 @@ bool CActionManager::PopActionResult(int* piDestActionType, void** ppDestination
 	*ppDestination = nullptr;
 	*piDestSize = 0;
 
+	std::cout << "pop result 0\n";
+
 	if (m_pActionResult == nullptr || m_actionResultSize == 0)
 	{
 		return false;
 	}
+
+	std::cout << "pop result 1\n";
 
 	*piDestActionType = m_iActionType;
 	*ppDestination = m_pActionResult;
@@ -89,5 +101,15 @@ bool CActionManager::PopActionResult(int* piDestActionType, void** ppDestination
 	m_iActionType = 0;
 	m_pActionResult = nullptr;
 	m_actionResultSize = 0;
+
+	std::cout << "pop result 2\n";
 	return true;
+}
+
+void CActionManager::run()
+{
+	while (true)
+	{
+		ShowHelp();
+	}
 }

@@ -8,8 +8,7 @@ private:
 	CWhiteList* m_pWhiteList;
 	CPacketHandler* m_pPacketHandler;
 	CActionManager* m_pActionManager;
-	CNetwork* m_pNetwork;
-
+	CNetworkServer* m_pNetwork;
 
 public:
 	CServer(CWhiteList* pWhiteList);
@@ -20,4 +19,9 @@ public:
 	bool Close();
 
 	static void PacketHandler(StreamSocket* pClientSocket, FIFOBuffer* pBuffer, ePacketType packetType);
+	static bool ConnectHandler(StreamSocket* pClientSocket);
+
+	void ProcessPacket(CPacket* pPacket);
+
+	void Packet_Message(CMessagePacket* pMessagePacket);
 };

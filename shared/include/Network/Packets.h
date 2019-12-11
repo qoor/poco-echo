@@ -7,8 +7,7 @@
 enum ePacketType
 {
 	PACKET_TYPE_KICK = 0x0F,
-	PACKET_TYPE_REQUEST_JOIN,
-	PACKET_TYPE_ALLOW,
+	PACKET_TYPE_ACCEPT,
 	PACKET_TYPE_MESSAGE,
 
 	// IMPORTANT: 마지막을 알기 위함. 패킷 송수신 용도로 쓰지 말 것.

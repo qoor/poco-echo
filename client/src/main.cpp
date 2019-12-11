@@ -12,10 +12,10 @@ int main(int argc, char** argv)
 		return 0;
 	}
 
-	CClient* pClient = new CClient(pOption->GetServerAddress(), pOption->GetServerPort());
+	CClient* pClient = new CClient();
 	assert(pClient);
 
-	if (pClient->TryConnect())
+	if (pClient->TryConnect(pOption->GetServerAddress(), pOption->GetServerPort()))
 	{
 		pClient->Run();
 
