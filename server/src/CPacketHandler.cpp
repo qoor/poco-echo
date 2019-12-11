@@ -1,6 +1,7 @@
 #include "StdInc.h"
 #include "CPacketTranslator.h"
 
+template <>
 CPacketHandler* CSingleton<CPacketHandler>::m_pInstance = nullptr;
 
 CPacketHandler::CPacketHandler(CServer* pServer)

@@ -1,5 +1,6 @@
 #include "StdInc.h"
 
+template <>
 CServer* CSingleton<CServer>::m_pInstance = nullptr;
 
 CServer::CServer(CWhiteList* pWhiteList) : m_pWhiteList(pWhiteList), m_pNetwork(nullptr)

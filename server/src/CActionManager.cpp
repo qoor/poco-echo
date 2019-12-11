@@ -1,6 +1,7 @@
 #include "StdInc.h"
 #include "CActionManager.h"
 
+template <>
 CActionManager* CSingleton<CActionManager>::m_pInstance = nullptr;
 
 CActionManager::CActionManager(CWhiteList* pWhiteList)

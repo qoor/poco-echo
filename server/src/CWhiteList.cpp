@@ -1,5 +1,6 @@
 #include "StdInc.h"
 
+template <>
 CWhiteList* CSingleton<CWhiteList>::m_pInstance = nullptr;
 
 CWhiteList::CWhiteList() : m_pDatabase(nullptr)
