@@ -59,6 +59,7 @@ bool CActionManager::GetAction(int iAction)
 		case 2:
 		{
 			std::cout << "클라이언트를 종료합니다.\n";
+			m_pClient->Disconnect();
 			exit(0);
 			break;
 		}

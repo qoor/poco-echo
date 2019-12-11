@@ -91,15 +91,15 @@ void CNetwork::OnUpdate()
 
 	while (true)
 	{
-		if (m_bCloseRequested)
-		{
-			break;
-		}
-
 		try
 		{
 			// 패킷 타입 읽기
-			while (!pSocket->poll(timeOut, Poco::Net::Socket::SELECT_READ));
+			while (!m_bCloseRequested && !pSocket->poll(timeOut, Poco::Net::Socket::SELECT_READ));
+
+			if (m_bCloseRequested)
+			{
+				break;
+			}
 
 			nByteCount = pSocket->receiveBytes(&packetType, sizeof(ePacketType));
 
@@ -109,7 +109,6 @@ void CNetwork::OnUpdate()
 			}
 
 			// 데이터 읽기
-			while (!pSocket->poll(timeOut, Poco::Net::Socket::SELECT_READ));
 
 			FIFOBuffer buffer(MAX_BUFFER_LENGTH);
 
@@ -271,85 +270,79 @@ void CNetworkServer::OnUpdate()
 
 	while (true)
 	{
-		try
+		if (m_bCloseRequested)
 		{
-			if (m_bCloseRequested)
+			break;
+		}
+
+		Poco::Net::Socket::SocketList readList(clients.begin(), clients.end());
+		Poco::Net::Socket::SocketList writeList(clients.begin(), clients.end());
+		Poco::Net::Socket::SocketList exceptList(clients.begin(), clients.end());
+
+		iCount = pServerSocket->select(readList, writeList, exceptList, timeOut);
+
+		if (iCount == 0)
+		{
+			continue;
+		}
+
+		Poco::Net::Socket::SocketList dropList;
+
+		for (auto& readSocket : readList)
+		{
+			if (readSocket == *pServerSocket)
 			{
-				break;
-			}
+				auto client = pServerSocket->acceptConnection();
 
-			Poco::Net::Socket::SocketList readList(clients.begin(), clients.end());
-			Poco::Net::Socket::SocketList writeList(clients.begin(), clients.end());
-			Poco::Net::Socket::SocketList exceptList(clients.begin(), clients.end());
+				if (m_pConnectHandler && !m_pConnectHandler(&client))
+				{
+					packetType = PACKET_TYPE_KICK;
 
-			iCount = pServerSocket->select(readList, writeList, exceptList, timeOut);
+					client.sendBytes(reinterpret_cast<char*>(&packetType), sizeof(ePacketType));
+					client.close();
+					continue;
+				}
 
-			if (iCount == 0)
-			{
+				packetType = PACKET_TYPE_ACCEPT;
+				client.sendBytes(reinterpret_cast<char*>(&packetType), sizeof(ePacketType));
+				clients.push_back(client);
 				continue;
 			}
 
-			Poco::Net::Socket::SocketList dropList;
+			FIFOBuffer buffer(MAX_BUFFER_LENGTH);
 
-			for (auto& readSocket : readList)
+			pClientSocket = static_cast<StreamSocket*>(&readSocket);
+			iCount = pClientSocket->receiveBytes(buffer);
+
+			if (iCount == 0)
 			{
-				if (readSocket == *pServerSocket)
-				{
-					auto client = pServerSocket->acceptConnection();
-
-					if (m_pConnectHandler && !m_pConnectHandler(&client))
-					{
-						packetType = PACKET_TYPE_KICK;
-
-						client.sendBytes(reinterpret_cast<char*>(&packetType), sizeof(ePacketType));
-						client.close();
-						continue;
-					}
-
-					packetType = PACKET_TYPE_ACCEPT;
-					client.sendBytes(reinterpret_cast<char*>(&packetType), sizeof(ePacketType));
-					clients.push_back(client);
-					continue;
-				}
-
-				FIFOBuffer buffer(MAX_BUFFER_LENGTH);
-
-				pClientSocket = static_cast<StreamSocket*>(&readSocket);
-				iCount = pClientSocket->receiveBytes(buffer);
-
-				if (iCount == 0)
-				{
-					dropList.push_back(readSocket);
-					continue;
-				}
-
-				buffer.read(reinterpret_cast<char*>(&packetType), sizeof(ePacketType));
-
-				Poco::Mutex& bufferMutex = buffer.mutex();
-
-				bufferMutex.lock();
-
-				for (auto handlerFunction : m_packetHandlerList)
-				{
-					handlerFunction(pClientSocket, &buffer, packetType);
-				}
-
-				bufferMutex.unlock();
+				dropList.push_back(readSocket);
+				continue;
 			}
 
-			for (auto& dropTarget : dropList)
-			{
-				auto iter = std::find_if(clients.begin(), clients.end(), [&dropTarget](auto& target) { return (dropTarget == target); });
+			buffer.read(reinterpret_cast<char*>(&packetType), sizeof(ePacketType));
 
-				if (iter != clients.end())
-				{
-					clients.erase(iter);
-				}
+			Poco::Mutex& bufferMutex = buffer.mutex();
+
+			bufferMutex.lock();
+
+			for (auto handlerFunction : m_packetHandlerList)
+			{
+				handlerFunction(pClientSocket, &buffer, packetType);
 			}
+
+			bufferMutex.unlock();
 		}
-		catch (Exception e)
+
+		for (auto& dropTarget : dropList)
 		{
-			std::cout << "서버 에러: " << e.displayText() << "\n";
+			auto iter = std::find_if(clients.begin(), clients.end(), [&dropTarget](auto& target) { return (dropTarget == target); });
+
+			if (iter != clients.end())
+			{
+				iter->close();
+				clients.erase(iter);
+			}
 		}
 	}
 
