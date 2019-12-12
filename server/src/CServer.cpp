@@ -95,7 +95,7 @@ bool CServer::ConnectHandler(StreamSocket* pClientSocket)
 {
 	CServer* pServer = CServer::GetInstance();
 
-	std::cout << "클라이언트 " << pClientSocket->address().toString() << " 접속 대기..\n";
+	std::cout << "클라이언트 " << pClientSocket->peerAddress().host().toString() << " 접속 대기..\n";
 
 	if (!pServer->m_pWhiteList->IsClientCanConnect(&pClientSocket->address()))
 	{
