@@ -1,6 +1,6 @@
 #pragma once
 
-class CActionManager : public Poco::Runnable, CSingleton<CActionManager>
+class CActionManager : public Poco::Runnable, public CSingleton<CActionManager>
 {
 private:
 	CWhiteList* m_pWhiteList;
