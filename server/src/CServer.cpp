@@ -98,7 +98,7 @@ bool CServer::ConnectHandler(StreamSocket* pClientSocket)
 
 	std::cout << "클라이언트 " << pClientSocket->peerAddress().host().toString() << " 접속 대기..\n";
 
-	if (!pServer->m_pWhiteList->IsClientCanConnect(clientAddress))
+	if (!pServer->m_pWhiteList->IsClientCanConnect(&clientAddress))
 	{
 		std::cout << "인증되지 않은 클라이언트\n";
 		return false;
