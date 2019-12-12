@@ -94,7 +94,7 @@ void CServer::Packet_Message(CMessagePacket* pPacket)
 bool CServer::ConnectHandler(StreamSocket* pClientSocket)
 {
 	CServer* pServer = CServer::GetInstance();
-	SocketAddress* pClientAddress = &pClientSocket->peerAddress();
+	SocketAddress& clientAddress = pClientSocket->peerAddress();
 
 	std::cout << "클라이언트 " << pClientSocket->peerAddress().host().toString() << " 접속 대기..\n";
 
