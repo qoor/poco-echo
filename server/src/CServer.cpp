@@ -53,8 +53,6 @@ void CServer::Run()
 void CServer::PacketHandler(StreamSocket* pClientSocket, FIFOBuffer* pBuffer, ePacketType packetType)
 {
 	CServer* pServer = CServer::GetInstance();
-
-	std::cout << "패킷 들어옴\n";
 	
 	pServer->m_pPacketHandler->ProcessPacket(pClientSocket, pBuffer, packetType);
 }
@@ -83,7 +81,7 @@ void CServer::Packet_Message(CMessagePacket* pPacket)
 	char* szMessage = pPacket->m_szMessage;
 
 	assert(szMessage);
-	std::cout << "클라이언트 (" << pClient->address().toString() << ")(으)로 부터 메세지 받음: " << szMessage << "\n";
+	std::cout << "클라이언트 (" << pClient->peerAddress().toString() << ")(으)로 부터 메세지 받음: " << szMessage << "\n";
 
 	CMessageSendPacket msgSendPacket(szMessage);
 
